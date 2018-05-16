@@ -22,8 +22,14 @@ def load_data(text):
     ID2label_senti[1] = '正向'
     ID2label_senti[2] = '负向'
     samples = []
+    sum=0
     for sent in text:
-        samples.append(re.split('[，,。！!？?:：；;\s]', sent))
+        sent_list=re.split('[，,。！!？?:：；;]', sent)
+        while "" in sent_list:
+            sent_list.remove("")
+        samples.append(sent_list)
+        sum = sum+len(sent_list)
+    print("# short sentence:", sum)
     return samples, ID2label_class, ID2label_senti
 
 def text_to_sequence(text, dict):
@@ -117,6 +123,7 @@ def predict(texts, dict, model, ID2label):
 
 def batch_predict(text):
     samples, ID2label_class, ID2label_sentiment = load_data(text)
+    print("# long sentence",samples)
     load_start = time.clock()
     dict_class = load_dict('./code/class_model/class2_weight_dropout0.2.dict')
     dict_sentiment = load_dict('./code/sentiment_model/sentiment_weight_no_reduce_produce.dict')
@@ -146,59 +153,78 @@ def batch_predict(text):
     predict_label_class2_1 = predict(samples, dict_class, model_class1, ID2label_class)
     predict_label_class2_2 = predict(samples, dict_class, model_class2, ID2label_class)
     predict_label_class2_3 = predict(samples, dict_class, model_class3, ID2label_class)
-    # predict_label_class2_4 = predict(samples, dict_class, model_class4, ID2label_class)
-    # predict_label_class2_5 = predict(samples, dict_class, model_class5, ID2label_class)
-    # predict_label_class2_6 = predict(samples, dict_class, model_class6, ID2label_class)
-    # predict_label_class2_7 = predict(samples, dict_class, model_class7, ID2label_class)
-    # predict_label_class2_8 = predict(samples, dict_class, model_class8, ID2label_class)
-    # predict_label_class2_9 = predict(samples, dict_class, model_class9, ID2label_class)
-    # predict_label_class2_10 = predict(samples, dict_class, model_class10, ID2label_class)
-    # predict_label_sentiment1 = predict(samples, dict_sentiment, model_sentiment1, ID2label_sentiment)
-    # predict_label_sentiment2 = predict(samples, dict_sentiment, model_sentiment2, ID2label_sentiment)
-    # predict_label_sentiment3 = predict(samples, dict_sentiment, model_sentiment3, ID2label_sentiment)
-    # predict_label_sentiment4 = predict(samples, dict_sentiment, model_sentiment4, ID2label_sentiment)
-    # predict_label_sentiment5 = predict(samples, dict_sentiment, model_sentiment5, ID2label_sentiment)
-    # print(predict_label_class2_1)
+    predict_label_class2_4 = predict(samples, dict_class, model_class4, ID2label_class)
+    predict_label_class2_5 = predict(samples, dict_class, model_class5, ID2label_class)
+    predict_label_class2_6 = predict(samples, dict_class, model_class6, ID2label_class)
+    predict_label_class2_7 = predict(samples, dict_class, model_class7, ID2label_class)
+    predict_label_class2_8 = predict(samples, dict_class, model_class8, ID2label_class)
+    predict_label_class2_9 = predict(samples, dict_class, model_class9, ID2label_class)
+    predict_label_class2_10 = predict(samples, dict_class, model_class10, ID2label_class)
+    predict_label_sentiment1 = predict(samples, dict_sentiment, model_sentiment1, ID2label_sentiment)
+    predict_label_sentiment2 = predict(samples, dict_sentiment, model_sentiment2, ID2label_sentiment)
+    predict_label_sentiment3 = predict(samples, dict_sentiment, model_sentiment3, ID2label_sentiment)
+    predict_label_sentiment4 = predict(samples, dict_sentiment, model_sentiment4, ID2label_sentiment)
+    predict_label_sentiment5 = predict(samples, dict_sentiment, model_sentiment5, ID2label_sentiment)
+    print(predict_label_class2_1)
+    class2_class1 = load_class2_to_class1()
+    predict_label_class1 = []
     predict_label_class2 = []
+    predict_label_sentiment = []
+
     for long in range(len(predict_label_class2_1)):
-        inner_term = []
+        inner_term_class1 = []
+        inner_term_class2 = []
+        inner_term_senti = []
+
+        selected_sent = []
+        sent_result = []
         for short in range(len(predict_label_class2_1[long])):
-            predict_list_class = [predict_label_class2_1[long][short], predict_label_class2_2[long][short], predict_label_class2_3[long][short]]# predict_label_class2_4, predict_label_class2_5,
-                            # predict_label_class2_6, predict_label_class2_7, predict_label_class2_8, predict_label_class2_9, predict_label_class2_10]
+            predict_list_class = [predict_label_class2_1[long][short], predict_label_class2_2[long][short], predict_label_class2_3[long][short], predict_label_class2_4[long][short], predict_label_class2_5[long][short],
+                            predict_label_class2_6[long][short], predict_label_class2_7[long][short], predict_label_class2_8[long][short], predict_label_class2_9[long][short], predict_label_class2_10[long][short]]
             predict_label_class2_term = max(predict_list_class, key=predict_list_class.count)
-            inner_term.append(predict_label_class2_term)
-            print(predict_label_class2_1)
-            print(predict_label_class2_2)
-            print(predict_label_class2_3)
+            predict_label_class1_term = class2_class1[predict_label_class2_term]
 
-            print(predict_label_class2)
-        predict_label_class2.append(inner_term)
-    print(predict_label_class2)
-            # class2_class1 = load_class2_to_class1()
-            # predict_label_class1 = class2_class1[predict_label_class2]
+            predict_list_senti = [predict_label_sentiment1[long][short], predict_label_sentiment2[long][short], predict_label_sentiment3[long][short],
+                    predict_label_sentiment4[long][short], predict_label_sentiment5[long][short]]
+            predict_label_sentiment_term = max(predict_list_senti, key=predict_list_senti.count)
+            if predict_label_class1_term != '其他' and predict_label_sentiment_term != '中性':
+                selected_sent.append(samples[long][short])
+                sent_result.append(str((predict_label_class1_term, predict_label_class2_term, predict_label_sentiment_term)))
+                # inner_term_class1.append(predict_label_class1_term)
+                # inner_term_class2.append(predict_label_class2_term)
+                #
+                # inner_term_senti.append(predict_label_sentiment_term)
+        result.append('，'.join(selected_sent) + '\t' + ', '.join(sent_result))
+        # predict_label_class1.append(inner_term_class1)
+        # predict_label_class2.append(inner_term_class2)
+        # predict_label_sentiment.append(inner_term_senti)
 
-    # predict_list_senti = [predict_label_sentiment1, predict_label_sentiment2, predict_label_sentiment3,
-    #                 predict_label_sentiment4, predict_label_sentiment5]
-    # predict_label_sentiment = max(predict_list_senti, key=predict_list_senti.count)
+    # print(predict_label_class1)
+    # print(predict_label_class2)
+    # print(predict_label_sentiment)
+
     # if predict_label_class1 != '其他' and predict_label_sentiment != '中性':
     #     selected_sent.append(sents[i])
     #     sent_result.append(str((predict_label_class1, predict_label_class2, predict_label_sentiment)))
     #     # print(sents[i]+'\t'+predict_label_class1+'\t'+predict_label_class2+'\t'+predict_label_sentiment)
     # result.append('，'.join(selected_sent)+'\t'+', '.join(sent_result))
-    # print("predict:"+str(time.clock() - start))
-    # writer = codecs.open('./data/result.txt', "w", encoding='utf-8',errors='ignore')
-    # for text in result:
-    #     writer.write(text+'\n')
-    # writer.flush()
-    # writer.close()
+    print("predict:"+str(time.clock() - start))
+    writer = codecs.open('./data/result.txt', "w", encoding='utf-8',errors='ignore')
+    for text in result:
+        writer.write(text+'\n')
+    writer.flush()
+    writer.close()
 
 if __name__ == '__main__':
     test = []
-    file = codecs.open('./data/test.txt', "r", encoding='utf-8', errors='ignore')
+    file = codecs.open('./data/data30.txt', "r", encoding='utf-8', errors='ignore')
     for line in file.readlines():
         line = line.strip()
         test.append(line)
+    # for i in range(10):
+    #     test.extend(test)
     file.close()
+    print(len(test))
     # test = ['客服还不错？用的很舒服，但是电池不耐用。还有点贵！',
     #         '高配CPU!如果价格低一些就更好了',
     #         '带手写功能的平板用着的确很舒服,就是接口太少了',
